@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex, nofollow">
+	<title>DNS Lookup</title>
+
+	<style>
+
+		@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;600;700&display=swap');
+
+		*, *::before, *::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--bg: #1a1d23;
+			--surface: #22262e;
+			--surface-2: #2a2f39;
+			--border: #333844;
+			--accent: #d4a55a;
+			--accent-dim: rgba( 212, 165, 90, 0.15 );
+			--green: #6abf69;
+			--red: #e06c6c;
+			--text: #e8eaf0;
+			--text-dim: #8a909e;
+			--radius: 10px;
+		}
+
+		body {
+			background: var( --bg );
+			color: var( --text );
+			font-family: 'DM Sans', system-ui, sans-serif;
+			min-height: 100vh;
+			line-height: 1.5;
+			padding: 32px 16px 64px;
+		}
+
+		.wrap {
+			max-width: 860px;
+			margin: 0 auto;
+		}
+
+		h1 {
+			font-family: 'DM Serif Display', Georgia, serif;
+			font-size: 2rem;
+			font-weight: 400;
+			color: var( --accent );
+			text-align: center;
+			margin-bottom: 8px;
+		}
+
+		.subtitle {
+			text-align: center;
+			color: var( --text-dim );
+			font-size: 0.9rem;
+			margin-bottom: 32px;
+		}
+
+		.subtitle code {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			font-size: 0.85em;
+			color: var( --text );
+		}
+
+		.skip-link {
+			position: absolute;
+			left: -999px;
+			top: 0;
+			background: var( --accent );
+			color: #1a1d23;
+			font-weight: 600;
+			padding: 8px 16px;
+			border-radius: var( --radius );
+			z-index: 10;
+		}
+
+		.skip-link:focus {
+			left: 16px;
+			top: 16px;
+		}
+
+		/* Surface card */
+
+		.card {
+			background: var( --surface );
+			border: 1px solid var( --border );
+			border-radius: var( --radius );
+			padding: 18px 20px;
+			margin-bottom: 16px;
+		}
+
+		/* Form */
+
+		label {
+			display: block;
+			font-size: 0.78rem;
+			color: var( --text-dim );
+			margin-bottom: 6px;
+		}
+
+		input[type="text"] {
+			width: 100%;
+			background: var( --surface-2 );
+			border: 1px solid var( --border );
+			border-radius: 6px;
+			color: var( --text );
+			font-family: inherit;
+			font-size: 0.9rem;
+			padding: 9px 12px;
+			outline: none;
+		}
+
+		input[type="text"]:focus {
+			border-color: var( --accent );
+		}
+
+		input[type="text"]:focus-visible,
+		button:focus-visible,
+		.chip:focus-visible {
+			outline: 2px solid var( --accent );
+			outline-offset: 2px;
+		}
+
+		.row {
+			display: flex;
+			gap: 12px;
+			align-items: flex-end;
+			flex-wrap: wrap;
+		}
+
+		.row .field {
+			flex: 1 1 240px;
+		}
+
+		/* Buttons */
+
+		button {
+			background: var( --accent );
+			color: #1a1d23;
+			border: none;
+			border-radius: 6px;
+			font-family: inherit;
+			font-size: 0.85rem;
+			font-weight: 600;
+			padding: 9px 18px;
+			cursor: pointer;
+			transition: opacity 0.15s;
+		}
+
+		button:hover {
+			opacity: 0.85;
+		}
+
+		button.secondary {
+			background: var( --surface-2 );
+			color: var( --text-dim );
+			border: 1px solid var( --border );
+		}
+
+		button.secondary:hover {
+			opacity: 1;
+			color: var( --text );
+			border-color: var( --accent );
+		}
+
+		/* Chips */
+
+		.chips {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			margin-top: 4px;
+		}
+
+		.chip {
+			background: var( --surface-2 );
+			border: 1px solid var( --border );
+			color: var( --text-dim );
+			font-family: inherit;
+			font-size: 0.78rem;
+			font-weight: 600;
+			padding: 6px 12px;
+			border-radius: 999px;
+			cursor: pointer;
+			transition: background 0.15s, color 0.15s, border-color 0.15s;
+		}
+
+		.chip[aria-pressed="true"] {
+			background: var( --accent );
+			color: #1a1d23;
+			border-color: var( --accent );
+		}
+
+		.presets {
+			display: flex;
+			gap: 12px;
+			flex-wrap: wrap;
+			margin-top: 14px;
+		}
+
+		.group {
+			margin-bottom: 18px;
+		}
+
+		.group:last-child {
+			margin-bottom: 0;
+		}
+
+		.group__head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			margin-bottom: 8px;
+		}
+
+		.group__title {
+			font-size: 0.85rem;
+			font-weight: 700;
+			color: var( --text );
+		}
+
+		/* Table */
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.85rem;
+		}
+
+		th,
+		td {
+			text-align: left;
+			padding: 8px 10px;
+			border-bottom: 1px solid var( --border );
+			vertical-align: top;
+		}
+
+		th {
+			font-size: 0.72rem;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var( --text-dim );
+			font-weight: 600;
+		}
+
+		td.value {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			word-break: break-all;
+		}
+
+		.ttl {
+			color: var( --text-dim );
+			white-space: nowrap;
+		}
+
+		.copy-btn {
+			background: var( --surface-2 );
+			color: var( --text-dim );
+			border: 1px solid var( --border );
+			font-size: 0.72rem;
+			font-weight: 600;
+			padding: 4px 10px;
+			border-radius: 4px;
+		}
+
+		.copy-btn:hover {
+			opacity: 1;
+			color: var( --text );
+			border-color: var( --accent );
+		}
+
+		/* Notes */
+
+		.note {
+			font-size: 0.8rem;
+			padding: 8px 12px;
+			border-radius: 6px;
+			margin-top: 8px;
+		}
+
+		.note--ok {
+			background: var( --accent-dim );
+			color: var( --green );
+		}
+
+		.note--warn {
+			background: var( --accent-dim );
+			color: var( --accent );
+		}
+
+		.note--err {
+			background: rgba( 224, 108, 108, 0.15 );
+			color: var( --red );
+		}
+
+		.empty {
+			color: var( --text-dim );
+			font-style: italic;
+			font-size: 0.85rem;
+		}
+
+		.provider {
+			font-size: 0.8rem;
+			color: var( --text-dim );
+			margin-bottom: 14px;
+		}
+
+		.provider strong {
+			color: var( --accent );
+			font-weight: 700;
+		}
+
+		.sr-only {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect( 0, 0, 0, 0 );
+			white-space: nowrap;
+			border: 0;
+		}
+
+		.spin {
+			display: inline-block;
+			width: 14px;
+			height: 14px;
+			border: 2px solid var( --border );
+			border-top-color: var( --accent );
+			border-radius: 50%;
+			animation: spin 0.7s linear infinite;
+			vertical-align: middle;
+		}
+
+		@keyframes spin {
+			to { transform: rotate( 360deg ); }
+		}
+
+	</style>
+
+</head>
+<body>
+
+	<a href="#main-content" class="skip-link" aria-label="Zum Hauptinhalt springen">Zum Hauptinhalt springen</a>
+
+	<div class="wrap">
+
+		<h1>DNS Lookup</h1>
+		<p class="subtitle">Record-Abfrage per DNS-over-HTTPS &middot; ohne Backend</p>
+
+		<main id="main-content">
+
+			<div class="card">
+
+				<form id="dns-form">
+
+					<div class="row">
+
+						<div class="field">
+							<label for="domain-input">Domain</label>
+							<input
+								id="domain-input"
+								type="text"
+								name="domain"
+								placeholder="beispiel.de"
+								autocomplete="off"
+								autocapitalize="off"
+								spellcheck="false"
+							>
+						</div>
+
+						<button type="submit" aria-label="DNS-Records abfragen">Abfragen</button>
+
+					</div>
+
+					<div class="group" style="margin-top:18px;">
+
+						<label id="types-label">Record-Typen</label>
+
+						<div class="chips" role="group" aria-labelledby="types-label" id="type-chips"></div>
+
+					</div>
+
+					<div class="presets">
+
+						<button type="button" class="secondary" id="preset-all" aria-label="Alle Standard-Records abfragen">Alle Records</button>
+
+						<button type="button" class="secondary" id="preset-mail" aria-label="E-Mail-Records SPF, DKIM und DMARC prüfen">E-Mail prüfen (SPF/DKIM/DMARC)</button>
+
+					</div>
+
+					<div class="group" style="margin-top:16px;">
+
+						<label for="dkim-selector">DKIM-Selector</label>
+
+						<input
+							id="dkim-selector"
+							type="text"
+							name="dkim-selector"
+							value="etermindkim"
+							autocomplete="off"
+							spellcheck="false"
+						>
+
+					</div>
+
+				</form>
+
+			</div><!-- end /.card -->
+
+			<div id="status" class="sr-only" role="status" aria-live="polite"></div>
+
+			<div id="results" aria-live="polite"></div>
+
+		</main>
+
+	</div><!-- end /.wrap -->
+
+	<script>
+		const DNS = {
+
+			// DNS record type numbers mapped to names
+			TYPES: {
+				1: "A",
+				2: "NS",
+				5: "CNAME",
+				6: "SOA",
+				12: "PTR",
+				15: "MX",
+				16: "TXT",
+				28: "AAAA",
+				33: "SRV",
+				257: "CAA"
+			},
+
+			// selectable chip types
+			SELECTABLE: [ "A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA", "CAA" ],
+
+			// default set for "Alle Records"
+			DEFAULT_SET: [ "A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA", "CAA" ],
+
+			// nameserver substring -> provider label
+			PROVIDERS: {
+				"rzone": "Strato",
+				"strato": "Strato",
+				"ui-dns": "IONOS",
+				"ionos": "IONOS",
+				"cloudflare": "Cloudflare",
+				"hetzner": "Hetzner",
+				"ovh": "OVH",
+				"googledomains": "Google Domains",
+				"awsdns": "AWS Route 53",
+				"azure-dns": "Azure DNS",
+				"all-inkl": "All-Inkl",
+				"kasserver": "All-Inkl",
+				"domaindiscount24": "dd24",
+				"netcup": "netcup",
+				"goneo": "goneo"
+			},
+
+			activeTypes: new Set( [ "A", "MX", "TXT" ] ),
+
+			init: function() {
+
+				this.form = document.querySelector( "#dns-form" );
+				this.input = document.querySelector( "#domain-input" );
+				this.selectorInput = document.querySelector( "#dkim-selector" );
+				this.results = document.querySelector( "#results" );
+				this.status = document.querySelector( "#status" );
+
+				this.renderChips();
+
+				this.form.addEventListener( "submit", ( e ) => {
+					e.preventDefault();
+					this.run( [ ...this.activeTypes ] );
+				});
+
+				document.querySelector( "#preset-all" ).addEventListener( "click", () => {
+					this.run( this.DEFAULT_SET );
+				});
+
+				document.querySelector( "#preset-mail" ).addEventListener( "click", () => {
+					this.runMail();
+				});
+
+			},
+
+			renderChips: function() {
+
+				const box = document.querySelector( "#type-chips" );
+
+				this.SELECTABLE.forEach( ( type ) => {
+
+					const chip = document.createElement( "button" );
+
+					chip.type = "button";
+					chip.className = "chip";
+					chip.textContent = type;
+					chip.setAttribute( "aria-pressed", this.activeTypes.has( type ) ? "true" : "false" );
+					chip.setAttribute( "aria-label", "Record-Typ " + type + " umschalten" );
+
+					chip.addEventListener( "click", () => {
+
+						if ( this.activeTypes.has( type ) ) {
+							this.activeTypes.delete( type );
+							chip.setAttribute( "aria-pressed", "false" );
+						} else {
+							this.activeTypes.add( type );
+							chip.setAttribute( "aria-pressed", "true" );
+						}
+
+					});
+
+					box.appendChild( chip );
+
+				});
+
+			},
+
+			cleanDomain: function( raw ) {
+
+				return raw.trim()
+					.replace( /^https?:\/\//i, "" )
+					.replace( /\/.*$/, "" )
+					.replace( /\.$/, "" )
+					.toLowerCase();
+
+			},
+
+			// single DoH query with fallback resolver
+			resolve: async function( name, type ) {
+
+				const endpoints = [
+					"https://dns.google/resolve?name=" + encodeURIComponent( name ) + "&type=" + type,
+					"https://cloudflare-dns.com/dns-query?name=" + encodeURIComponent( name ) + "&type=" + type
+				];
+
+				for ( const url of endpoints ) {
+
+					try {
+
+						const res = await fetch( url, { headers: { "accept": "application/dns-json" } } );
+
+						if ( res.ok ) {
+							return await res.json();
+						}
+
+					} catch ( e ) {
+						// try next endpoint
+					}
+
+				}
+
+				throw new Error( "Kein Resolver erreichbar" );
+
+			},
+
+			run: async function( types ) {
+
+				const domain = this.cleanDomain( this.input.value );
+
+				if ( ! domain ) {
+					this.input.focus();
+					return;
+				}
+
+				if ( ! types.length ) {
+					this.showMessage( "Bitte mindestens einen Record-Typ wählen." );
+					return;
+				}
+
+				this.setLoading( domain );
+
+				const jobs = types.map( ( t ) => this.resolve( domain, t )
+					.then( ( data ) => ({ type: t, data }) )
+					.catch( () => ({ type: t, data: null })) );
+
+				const settled = await Promise.all( jobs );
+
+				this.render( domain, settled );
+
+			},
+
+			runMail: async function() {
+
+				const domain = this.cleanDomain( this.input.value );
+
+				if ( ! domain ) {
+					this.input.focus();
+					return;
+				}
+
+				const selector = this.selectorInput.value.trim() || "default";
+
+				this.setLoading( domain );
+
+				const dkimName = selector + "._domainkey." + domain;
+
+				const jobs = [
+					this.resolve( domain, "TXT" ).then( ( d ) => ({ type: "TXT", label: "SPF (TXT @)", data: d }) ).catch( () => ({ type: "TXT", label: "SPF (TXT @)", data: null }) ),
+					this.resolve( "_dmarc." + domain, "TXT" ).then( ( d ) => ({ type: "TXT", label: "DMARC", data: d }) ).catch( () => ({ type: "TXT", label: "DMARC", data: null }) ),
+					this.resolve( dkimName, "CNAME" ).then( ( d ) => ({ type: "CNAME", label: "DKIM CNAME (" + selector + ")", data: d }) ).catch( () => ({ type: "CNAME", label: "DKIM CNAME (" + selector + ")", data: null }) ),
+					this.resolve( dkimName, "TXT" ).then( ( d ) => ({ type: "TXT", label: "DKIM TXT (" + selector + ")", data: d }) ).catch( () => ({ type: "TXT", label: "DKIM TXT (" + selector + ")", data: null }) )
+				];
+
+				const settled = await Promise.all( jobs );
+
+				this.renderMail( domain, settled );
+
+			},
+
+			setLoading: function( domain ) {
+
+				this.results.innerHTML = '<div class="card"><span class="spin" aria-hidden="true"></span> <span style="margin-left:8px;">Frage ' + this.esc( domain ) + ' ab &hellip;</span></div>';
+				this.status.textContent = "Abfrage läuft für " + domain;
+
+			},
+
+			showMessage: function( msg ) {
+
+				this.results.innerHTML = '<div class="card"><p class="empty">' + this.esc( msg ) + "</p></div>";
+
+			},
+
+			render: function( domain, settled ) {
+
+				let html = '<div class="card">';
+
+				html += this.providerBlock( settled );
+
+				settled.forEach( ( item ) => {
+
+					html += this.groupBlock( item.type, ( item.data && item.data.Answer ) || [], item.data );
+
+				});
+
+				html += "</div>";
+
+				this.results.innerHTML = html;
+				this.bindCopy();
+				this.status.textContent = "Ergebnisse für " + domain + " geladen";
+
+			},
+
+			renderMail: function( domain, settled ) {
+
+				let html = '<div class="card">';
+
+				settled.forEach( ( item ) => {
+
+					const answers = ( item.data && item.data.Answer ) || [];
+
+					html += '<div class="group">';
+					html += '<div class="group__head"><span class="group__title">' + this.esc( item.label ) + "</span></div>";
+
+					if ( answers.length ) {
+						html += this.tableFor( answers );
+					} else {
+						html += '<p class="empty">Kein Eintrag gefunden.</p>';
+					}
+
+					html += this.mailNote( item.label, answers );
+					html += "</div>";
+
+				});
+
+				html += "</div>";
+
+				this.results.innerHTML = html;
+				this.bindCopy();
+				this.status.textContent = "E-Mail-Prüfung für " + domain + " abgeschlossen";
+
+			},
+
+			groupBlock: function( type, answers, data ) {
+
+				let html = '<div class="group">';
+
+				html += '<div class="group__head"><span class="group__title">' + type + " &middot; " + answers.length + "</span></div>";
+
+				if ( answers.length ) {
+					html += this.tableFor( answers );
+				} else {
+					const status = data ? "" : " (Abfrage fehlgeschlagen)";
+					html += '<p class="empty">Kein ' + type + "-Eintrag" + status + ".</p>";
+				}
+
+				html += "</div>";
+
+				return html;
+
+			},
+
+			tableFor: function( answers ) {
+
+				let rows = "";
+
+				answers.forEach( ( a ) => {
+
+					const typeName = this.TYPES[ a.type ] || a.type;
+					const value = this.esc( a.data );
+
+					rows += "<tr>";
+					rows += "<td>" + typeName + "</td>";
+					rows += '<td class="ttl">' + a.TTL + "</td>";
+					rows += '<td class="value">' + value + "</td>";
+					rows += '<td><button type="button" class="copy-btn" data-copy="' + value + '" aria-label="Wert kopieren">Kopieren</button></td>';
+					rows += "</tr>";
+
+				});
+
+				return "<table><thead><tr><th>Typ</th><th>TTL</th><th>Wert</th><th><span class=\"sr-only\">Aktion</span></th></tr></thead><tbody>" + rows + "</tbody></table>";
+
+			},
+
+			// plain-text evaluation of SPF / DMARC / DKIM
+			mailNote: function( label, answers ) {
+
+				if ( ! answers.length ) {
+
+					if ( label.indexOf( "DKIM" ) === 0 ) {
+						return '<div class="note note--warn">DKIM fehlt – Mails über externe Versender können abgelehnt werden.</div>';
+					}
+
+					return "";
+
+				}
+
+				const joined = answers.map( ( a ) => a.data ).join( " " ).toLowerCase();
+
+				if ( label.indexOf( "SPF" ) === 0 && joined.indexOf( "v=spf1" ) !== -1 ) {
+
+					let policy = "neutral";
+
+					if ( joined.indexOf( "-all" ) !== -1 ) policy = "hart (-all)";
+					else if ( joined.indexOf( "~all" ) !== -1 ) policy = "soft (~all)";
+
+					return '<div class="note note--ok">SPF vorhanden &middot; Policy: ' + policy + "</div>";
+
+				}
+
+				if ( label.indexOf( "DMARC" ) === 0 && joined.indexOf( "v=dmarc1" ) !== -1 ) {
+
+					let p = "none";
+
+					if ( joined.indexOf( "p=reject" ) !== -1 ) p = "reject";
+					else if ( joined.indexOf( "p=quarantine" ) !== -1 ) p = "quarantine";
+
+					const cls = p === "none" ? "note--warn" : "note--ok";
+
+					return '<div class="note ' + cls + '">DMARC vorhanden &middot; p=' + p + "</div>";
+
+				}
+
+				if ( label.indexOf( "DKIM" ) === 0 ) {
+					return '<div class="note note--ok">DKIM-Eintrag vorhanden.</div>';
+				}
+
+				return "";
+
+			},
+
+			// provider detection from NS records
+			providerBlock: function( settled ) {
+
+				const nsItem = settled.find( ( s ) => s.type === "NS" );
+
+				if ( ! nsItem || ! nsItem.data || ! nsItem.data.Answer ) {
+					return "";
+				}
+
+				const nsValues = nsItem.data.Answer.map( ( a ) => a.data.toLowerCase() ).join( " " );
+				let found = null;
+
+				for ( const key in this.PROVIDERS ) {
+
+					if ( nsValues.indexOf( key ) !== -1 ) {
+						found = this.PROVIDERS[ key ];
+						break;
+					}
+
+				}
+
+				if ( ! found ) {
+					return "";
+				}
+
+				return '<p class="provider">DNS verwaltet bei: <strong>' + this.esc( found ) + "</strong></p>";
+
+			},
+
+			bindCopy: function() {
+
+				this.results.querySelectorAll( ".copy-btn" ).forEach( ( btn ) => {
+
+					btn.addEventListener( "click", async () => {
+
+						try {
+							await navigator.clipboard.writeText( btn.dataset.copy );
+							const old = btn.textContent;
+							btn.textContent = "Kopiert ✓";
+							setTimeout( () => { btn.textContent = old; }, 1200 );
+						} catch ( e ) {
+							// clipboard blocked
+						}
+
+					});
+
+				});
+
+			},
+
+			esc: function( str ) {
+
+				const d = document.createElement( "div" );
+				d.textContent = String( str );
+				return d.innerHTML;
+
+			}
+
+		};
+
+		DNS.init();
+	</script>
+
+</body>
+</html>
