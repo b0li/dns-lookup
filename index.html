@@ -203,6 +203,15 @@
 			margin-top: 14px;
 		}
 
+		.presets .reset {
+			margin-left: auto;
+		}
+
+		.presets .reset:hover {
+			color: var( --red );
+			border-color: var( --red );
+		}
+
 		.group {
 			margin-bottom: 18px;
 		}
@@ -394,6 +403,8 @@
 
 						<button type="button" class="secondary" id="preset-mail" aria-label="E-Mail-Records SPF, DKIM und DMARC prüfen">E-Mail prüfen (SPF/DKIM/DMARC)</button>
 
+						<button type="button" class="secondary reset" id="reset-btn" aria-label="Formular und Ergebnisse zurücksetzen">Zurücksetzen</button>
+
 					</div>
 
 					<div class="group" style="margin-top:16px;">
@@ -465,6 +476,10 @@
 				"goneo": "goneo"
 			},
 
+			// default chip selection + DKIM selector (restored on reset)
+			DEFAULT_TYPES: [ "A", "MX", "TXT" ],
+			DEFAULT_SELECTOR: "etermindkim",
+
 			activeTypes: new Set( [ "A", "MX", "TXT" ] ),
 
 			init: function() {
@@ -489,6 +504,28 @@
 				document.querySelector( "#preset-mail" ).addEventListener( "click", () => {
 					this.runMail();
 				});
+
+				document.querySelector( "#reset-btn" ).addEventListener( "click", () => {
+					this.reset();
+				});
+
+			},
+
+			reset: function() {
+
+				this.input.value = "";
+				this.selectorInput.value = this.DEFAULT_SELECTOR;
+
+				this.activeTypes = new Set( this.DEFAULT_TYPES );
+
+				document.querySelectorAll( "#type-chips .chip" ).forEach( ( chip ) => {
+					chip.setAttribute( "aria-pressed", this.activeTypes.has( chip.textContent ) ? "true" : "false" );
+				});
+
+				this.results.innerHTML = "";
+				this.status.textContent = "Zurückgesetzt";
+
+				this.input.focus();
 
 			},
 
