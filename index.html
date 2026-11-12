@@ -352,6 +352,106 @@
 			to { transform: rotate( 360deg ); }
 		}
 
+		/* FAQ / Legende */
+
+		.faq {
+			background: var( --surface );
+			border: 1px solid var( --border );
+			border-radius: var( --radius );
+			padding: 0 20px;
+			margin-top: 24px;
+		}
+
+		.faq > summary {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 16px 0;
+			font-size: 0.9rem;
+			font-weight: 700;
+			color: var( --text );
+			cursor: pointer;
+			list-style: none;
+		}
+
+		.faq > summary::-webkit-details-marker {
+			display: none;
+		}
+
+		.faq > summary::before {
+			content: "";
+			width: 7px;
+			height: 7px;
+			border-right: 2px solid var( --accent );
+			border-bottom: 2px solid var( --accent );
+			transform: rotate( -45deg );
+			transition: transform 0.2s;
+			flex-shrink: 0;
+		}
+
+		.faq[open] > summary::before {
+			transform: rotate( 45deg );
+		}
+
+		.faq__body {
+			padding-bottom: 20px;
+		}
+
+		.faq__section {
+			margin-top: 18px;
+		}
+
+		.faq__section:first-child {
+			margin-top: 0;
+		}
+
+		.faq__title {
+			font-size: 0.72rem;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: var( --text-dim );
+			font-weight: 700;
+			margin-bottom: 10px;
+		}
+
+		.faq dl {
+			display: grid;
+			grid-template-columns: 96px 1fr;
+			gap: 8px 16px;
+			margin: 0;
+		}
+
+		.faq dt {
+			font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+			font-size: 0.82rem;
+			font-weight: 600;
+			color: var( --accent );
+		}
+
+		.faq dd {
+			margin: 0;
+			font-size: 0.85rem;
+			color: var( --text-dim );
+		}
+
+		.faq dd strong {
+			color: var( --text );
+			font-weight: 600;
+		}
+
+		@media ( max-width: 520px ) {
+
+			.faq dl {
+				grid-template-columns: 1fr;
+				gap: 2px 0;
+			}
+
+			.faq dd {
+				margin-bottom: 8px;
+			}
+
+		}
+
 	</style>
 
 </head>
@@ -429,6 +529,79 @@
 			<div id="status" class="sr-only" role="status" aria-live="polite"></div>
 
 			<div id="results" aria-live="polite"></div>
+
+			<details class="faq">
+
+				<summary>Was bedeutet was? – Legende &amp; FAQ</summary>
+
+				<div class="faq__body">
+
+					<div class="faq__section">
+
+						<p class="faq__title">Record-Typen</p>
+
+						<dl>
+							<dt>A</dt>
+							<dd><strong>IPv4-Adresse</strong> des Hosts – wohin die Domain zeigt (z. B. der Webserver).</dd>
+
+							<dt>AAAA</dt>
+							<dd><strong>IPv6-Adresse</strong> des Hosts – das moderne Gegenstück zum A-Record.</dd>
+
+							<dt>CNAME</dt>
+							<dd><strong>Alias</strong> auf einen anderen Hostnamen. Oft für Subdomains oder externe Dienste.</dd>
+
+							<dt>MX</dt>
+							<dd><strong>Mailserver</strong>, der E-Mails für die Domain annimmt. Niedrigere Priorität = höhere Priorität.</dd>
+
+							<dt>TXT</dt>
+							<dd><strong>Freitext</strong>-Einträge. Tragen u. a. SPF, DKIM und Domain-Verifizierungen.</dd>
+
+							<dt>NS</dt>
+							<dd><strong>Nameserver</strong>, die für die Domain zuständig sind – zeigen, wo das DNS verwaltet wird.</dd>
+
+							<dt>SOA</dt>
+							<dd><strong>Start of Authority</strong>: primärer Nameserver, Zonen-Seriennummer und Refresh-Zeiten.</dd>
+
+							<dt>CAA</dt>
+							<dd><strong>Certificate Authority Authorization</strong>: legt fest, welche CAs Zertifikate ausstellen dürfen.</dd>
+						</dl>
+
+					</div><!-- end /.faq__section -->
+
+					<div class="faq__section">
+
+						<p class="faq__title">E-Mail-Absicherung</p>
+
+						<dl>
+							<dt>SPF</dt>
+							<dd>Legt fest, <strong>welche Server im Namen der Domain senden dürfen</strong>. <code>-all</code> = hart (alles andere ablehnen), <code>~all</code> = soft.</dd>
+
+							<dt>DKIM</dt>
+							<dd><strong>Kryptografische Signatur</strong> ausgehender Mails. Liegt unter <code>selector._domainkey.domain</code>.</dd>
+
+							<dt>DMARC</dt>
+							<dd><strong>Richtlinie</strong>, was bei fehlgeschlagenem SPF/DKIM passiert: <code>p=none</code> (nur Monitoring), <code>quarantine</code> oder <code>reject</code>.</dd>
+						</dl>
+
+					</div><!-- end /.faq__section -->
+
+					<div class="faq__section">
+
+						<p class="faq__title">Begriffe</p>
+
+						<dl>
+							<dt>TTL</dt>
+							<dd><strong>Time to live</strong> in Sekunden – wie lange ein Record zwischengespeichert wird, bevor neu abgefragt wird.</dd>
+
+							<dt>DoH</dt>
+							<dd><strong>DNS-over-HTTPS</strong>: Die Abfrage läuft verschlüsselt über HTTPS direkt im Browser – kein eigener Server nötig.</dd>
+						</dl>
+
+					</div><!-- end /.faq__section -->
+
+				</div><!-- end /.faq__body -->
+
+			</details><!-- end /.faq -->
 
 		</main>
 
